@@ -1,0 +1,22 @@
+package {{package}};
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import com.example.demo.entity.{{className}};
+import com.example.demo.service.{{className}}Service;
+
+@RestController
+@RequestMapping("/api/{{className}}")
+public class {{className}}Controller {
+    @Autowired
+    private {{className}}Service service;
+
+    @GetMapping
+    public List<{{className}}> getAll() {
+        // Implementar lógica para obtener todos
+        return null;
+    }
+
+    // Agrega aquí más endpoints según necesidad
+}

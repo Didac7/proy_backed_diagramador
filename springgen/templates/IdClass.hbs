@@ -1,0 +1,37 @@
+package {{package}};
+
+import java.io.Serializable;
+import java.util.Objects;
+
+public class {{idClassName}} implements Serializable {
+{{#each pkFields}}
+    private {{javaType}} {{name}};
+{{/each}}
+
+    // Getters y Setters
+{{#each pkFields}}
+    public {{javaType}} get{{capitalize name}}() { return {{name}}; }
+    public void set{{capitalize name}}({{javaType}} {{name}}) { this.{{name}} = {{name}}; }
+{{/each}}
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        {{idClassName}} that = ({{idClassName}}) o;
+        return (
+            {{#each pkFields}}
+            Objects.equals({{name}}, that.{{name}}){{#unless @last}} && {{/unless}}
+            {{/each}}
+        );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+            {{#each pkFields}}
+            {{name}}{{#unless @last}}, {{/unless}}
+            {{/each}}
+        );
+    }
+}

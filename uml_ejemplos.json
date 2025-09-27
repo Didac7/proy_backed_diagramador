@@ -1,0 +1,121 @@
+[
+  {
+    "proyecto": "Ecommerce",
+    "entidades": [
+      {"nombre": "Producto", "atributos": ["id", "nombre", "precio", "stock"]},
+      {"nombre": "Cliente", "atributos": ["id", "nombre", "email"]},
+      {"nombre": "Pedido", "atributos": ["id", "fecha", "total"]}
+    ],
+    "relaciones": [
+      {"origen": "Cliente", "destino": "Pedido", "tipo": "uno a muchos", "descripcion": "Realiza"},
+      {"origen": "Pedido", "destino": "Producto", "tipo": "muchos a muchos", "descripcion": "Incluye"}
+    ]
+  },
+  {
+    "proyecto": "Asistencia",
+    "entidades": [
+      {"nombre": "Empleado", "atributos": ["id", "nombre", "departamento"]},
+      {"nombre": "RegistroAsistencia", "atributos": ["id", "fecha", "horaEntrada", "horaSalida"]}
+    ],
+    "relaciones": [
+      {"origen": "Empleado", "destino": "RegistroAsistencia", "tipo": "uno a muchos", "descripcion": "Tiene"}
+    ]
+  },
+  {
+    "proyecto": "Biblioteca",
+    "entidades": [
+      {"nombre": "Libro", "atributos": ["id", "titulo", "autor", "anio"]},
+      {"nombre": "Usuario", "atributos": ["id", "nombre", "carrera"]},
+      {"nombre": "Prestamo", "atributos": ["id", "fechaPrestamo", "fechaDevolucion"]}
+    ],
+    "relaciones": [
+      {"origen": "Usuario", "destino": "Prestamo", "tipo": "uno a muchos", "descripcion": "Realiza"},
+      {"origen": "Prestamo", "destino": "Libro", "tipo": "muchos a muchos", "descripcion": "Incluye"}
+    ]
+  },
+  {
+    "proyecto": "Hospital",
+    "entidades": [
+      {"nombre": "Paciente", "atributos": ["id", "nombre", "fechaNacimiento"]},
+      {"nombre": "Medico", "atributos": ["id", "nombre", "especialidad"]},
+      {"nombre": "Cita", "atributos": ["id", "fecha", "motivo"]}
+    ],
+    "relaciones": [
+      {"origen": "Paciente", "destino": "Cita", "tipo": "uno a muchos", "descripcion": "Solicita"},
+      {"origen": "Medico", "destino": "Cita", "tipo": "uno a muchos", "descripcion": "Atiende"}
+    ]
+  },
+  {
+    "proyecto": "Escuela",
+    "entidades": [
+      {"nombre": "Alumno", "atributos": ["id", "nombre", "grado"]},
+      {"nombre": "Curso", "atributos": ["id", "nombre", "creditos"]},
+      {"nombre": "Matricula", "atributos": ["id", "anio"]}
+    ],
+    "relaciones": [
+      {"origen": "Alumno", "destino": "Matricula", "tipo": "uno a muchos", "descripcion": "Tiene"},
+      {"origen": "Matricula", "destino": "Curso", "tipo": "muchos a muchos", "descripcion": "Incluye"}
+    ]
+  },
+  {
+    "proyecto": "Restaurante",
+    "entidades": [
+      {"nombre": "Mesa", "atributos": ["id", "numero", "capacidad"]},
+      {"nombre": "Reserva", "atributos": ["id", "fecha", "hora"]},
+      {"nombre": "Cliente", "atributos": ["id", "nombre", "telefono"]}
+    ],
+    "relaciones": [
+      {"origen": "Cliente", "destino": "Reserva", "tipo": "uno a muchos", "descripcion": "Realiza"},
+      {"origen": "Reserva", "destino": "Mesa", "tipo": "uno a uno", "descripcion": "Asigna"}
+    ]
+  },
+  {
+    "proyecto": "Hotel",
+    "entidades": [
+      {"nombre": "Habitacion", "atributos": ["id", "numero", "tipo"]},
+      {"nombre": "Huesped", "atributos": ["id", "nombre", "documento"]},
+      {"nombre": "Reserva", "atributos": ["id", "fechaEntrada", "fechaSalida"]}
+    ],
+    "relaciones": [
+      {"origen": "Huesped", "destino": "Reserva", "tipo": "uno a muchos", "descripcion": "Realiza"},
+      {"origen": "Reserva", "destino": "Habitacion", "tipo": "uno a uno", "descripcion": "Asigna"}
+    ]
+  },
+  {
+    "proyecto": "Red Social",
+    "entidades": [
+      {"nombre": "Usuario", "atributos": ["id", "nombre", "email"]},
+      {"nombre": "Publicacion", "atributos": ["id", "contenido", "fecha"]},
+      {"nombre": "Comentario", "atributos": ["id", "texto", "fecha"]}
+    ],
+    "relaciones": [
+      {"origen": "Usuario", "destino": "Publicacion", "tipo": "uno a muchos", "descripcion": "Crea"},
+      {"origen": "Publicacion", "destino": "Comentario", "tipo": "uno a muchos", "descripcion": "Tiene"},
+      {"origen": "Usuario", "destino": "Comentario", "tipo": "uno a muchos", "descripcion": "Escribe"}
+    ]
+  },
+  {
+    "proyecto": "Blog",
+    "entidades": [
+      {"nombre": "Autor", "atributos": ["id", "nombre", "bio"]},
+      {"nombre": "Entrada", "atributos": ["id", "titulo", "contenido", "fecha"]},
+      {"nombre": "Comentario", "atributos": ["id", "texto", "fecha"]}
+    ],
+    "relaciones": [
+      {"origen": "Autor", "destino": "Entrada", "tipo": "uno a muchos", "descripcion": "Escribe"},
+      {"origen": "Entrada", "destino": "Comentario", "tipo": "uno a muchos", "descripcion": "Recibe"}
+    ]
+  },
+  {
+    "proyecto": "Inventario",
+    "entidades": [
+      {"nombre": "Producto", "atributos": ["id", "nombre", "cantidad"]},
+      {"nombre": "Proveedor", "atributos": ["id", "nombre", "telefono"]},
+      {"nombre": "EntradaStock", "atributos": ["id", "fecha", "cantidad"]}
+    ],
+    "relaciones": [
+      {"origen": "Proveedor", "destino": "EntradaStock", "tipo": "uno a muchos", "descripcion": "Realiza"},
+      {"origen": "EntradaStock", "destino": "Producto", "tipo": "uno a muchos", "descripcion": "Afecta"}
+    ]
+  }
+]
