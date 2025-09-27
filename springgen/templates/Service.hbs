@@ -1,8 +1,41 @@
+
+
+
 package {{package}};
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+import java.util.Optional;
+import com.example.demo.entity.{{className}};
+import com.example.demo.repository.{{className}}Repository;
 
 @Service
 public class {{className}}Service {
-    // Métodos del servicio para {{className}}
+    @Autowired
+    private {{className}}Repository repository;
+
+    public List<{{className}}> findAll() {
+        return repository.findAll();
+    }
+
+    public Optional<{{className}}> findById({{#if idClassName}}{{idClassName}}{{else}}Long{{/if}} id) {
+        return repository.findById(id);
+    }
+
+    public {{className}} save({{className}} entity) {
+        return repository.save(entity);
+    }
+
+    public {{className}} update({{#if idClassName}}{{idClassName}}{{else}}Long{{/if}} id, {{className}} entity) {
+        if (repository.existsById(id)) {
+            // Aquí podrías setear el id si es necesario
+            return repository.save(entity);
+        }
+        throw new RuntimeException("No existe el registro con id " + id);
+    }
+
+    public void delete({{#if idClassName}}{{idClassName}}{{else}}Long{{/if}} id) {
+        repository.deleteById(id);
+    }
 }

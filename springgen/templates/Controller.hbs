@@ -1,8 +1,14 @@
+
+
+
+
+
 package {{package}};
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Optional;
 import com.example.demo.entity.{{className}};
 import com.example.demo.service.{{className}}Service;
 
@@ -14,9 +20,26 @@ public class {{className}}Controller {
 
     @GetMapping
     public List<{{className}}> getAll() {
-        // Implementar lógica para obtener todos
-        return null;
+        return service.findAll();
     }
 
-    // Agrega aquí más endpoints según necesidad
+    @GetMapping("/{id}")
+    public Optional<{{className}}> getById(@PathVariable {{#if idClassName}}{{idClassName}}{{else}}Long{{/if}} id) {
+        return service.findById(id);
+    }
+
+    @PostMapping
+    public {{className}} create(@RequestBody {{className}} entity) {
+        return service.save(entity);
+    }
+
+    @PutMapping("/{id}")
+    public {{className}} update(@PathVariable {{#if idClassName}}{{idClassName}}{{else}}Long{{/if}} id, @RequestBody {{className}} entity) {
+        return service.update(id, entity);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable {{#if idClassName}}{{idClassName}}{{else}}Long{{/if}} id) {
+        service.delete(id);
+    }
 }

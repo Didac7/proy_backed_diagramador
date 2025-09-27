@@ -1,10 +1,16 @@
+
+
+
 package {{package}};
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import com.example.demo.entity.{{className}};
+{{#if idClassName}}
+import com.example.demo.entity.{{idClassName}};
+{{/if}}
 
 @Repository
-public interface {{className}}Repository extends JpaRepository<{{className}}, Long> {
+public interface {{className}}Repository extends JpaRepository<{{className}}, {{#if idClassName}}{{idClassName}}{{else}}Long{{/if}}> {
     // Métodos personalizados si es necesario
 }
