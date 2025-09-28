@@ -1,9 +1,24 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import ReactFlow, { Background, Controls, MiniMap, addEdge, useNodesState, useEdgesState } from 'reactflow';
-import 'reactflow/dist/style.css';
+import 'reactflo  const [chats, setChats] = useState(getInitialChats());
+  const [selectedId, setSelectedId] = useState(chats[0]?.id);
+  const selectedChat = chats.find(c => c.id === selectedId) || chats[0];
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  // Sincronizar nodos y edges cuando cambia el chat seleccionado
+  useEffect(() => {
+    console.log('Sincronizando con chat seleccionado:', selectedChat.uml);
+    setNodes(selectedChat.uml.nodes || []);
+    setEdges(selectedChat.uml.edges || []);
+  }, [selectedId, setNodes, setEdges]);t/style.css';
 import ChatInput from './ChatInput';
 import Sidebar from './Sidebar';
+import UmlNode from './UmlNode';
+
+// Definir nodeTypes fuera del componente para evitar renders infinitos
+const nodeTypes = { umlNode: UmlNode };
 // Razonamiento automático para atributos y relaciones
 const atributosPorEntidad = {
   cliente: ['id', 'nombre', 'email'],
@@ -271,76 +286,22 @@ function App() {
     // Añade mensaje del usuario
     const newHistory = [...selectedChat.history, { role: 'user', content: input }];
     let newUml = { nodes: [], edges: [] };
-    // Llama a OpenAI si la frase es compleja
-    if (input.length > 30) {
-      try {
-        const prompt = `Genera un diagrama UML completo y detallado para el siguiente sistema. Incluye al menos 6 entidades relevantes, atributos realistas para cada entidad y todas las relaciones posibles (uno a uno, uno a muchos, muchos a muchos). Responde solo en JSON con el formato: { "entidades": [{"nombre": "Entidad", "atributos": ["attr1", ...]}], "relaciones": [{"origen": "Entidad1", "destino": "Entidad2", "tipo": "uno a muchos"}] }. Requerimiento: ${input}`;
-        const response = await axios.post('http://localhost:3001/api/uml', { prompt });
-        const content = response.data.content;
-        let json;
-        try {
-          json = JSON.parse(content);
-        } catch {
-          const match = content.match(/\{[\s\S]*\}/);
-          if (match) {
-            try {
-              json = JSON.parse(match[0]);
-            } catch {
-              json = null;
-            }
-          } else {
-            json = null;
-          }
-        }
-        if (json && json.entidades) {
-          let x = 100, y = 100;
-          const nodes = json.entidades.map(ent => {
-            const id = ent.nombre;
-            const attrLines = ent.atributos;
-            const label = `${ent.nombre}\n${attrLines.map(a => '- ' + a).join('\n')}`;
-            const node = {
-              id,
-              position: { x, y },
-              data: { label },
-              type: 'default',
-            };
-            x += 250;
-            if (x > 600) { x = 100; y += 200; }
-            return node;
-          });
-          const edges = (json.relaciones || []).map(r => ({
-            id: `e${r.origen}-${r.destino}`,
-            source: r.origen,
-            target: r.destino,
-            label: r.tipo,
-            type: 'smoothstep',
-            animated: true,
-          }));
-          newUml = { nodes, edges };
-        }
-      } catch (e) {
+    
+    try {
+      // Llamar al backend que ahora devuelve directamente { nodes, edges }
+      const response = await axios.post('http://localhost:3001/api/uml', { prompt: input });
+      
+      if (response.data && response.data.nodes && response.data.edges) {
+        newUml = response.data;
+      } else {
+        console.error('Respuesta del backend no tiene el formato esperado:', response.data);
         newUml = { nodes: [], edges: [] };
       }
-    } else {
-      // Parser local
-      let entidades = [];
-      const match = input.match(/entidades:\s*([\w, ]+)/i);
-      if (match) {
-        entidades = match[1].split(',').map(e => e.trim()).filter(Boolean);
-      } else if (input.includes(',')) {
-        entidades = input.split(',').map(e => e.trim()).filter(Boolean);
-      } else {
-        const palabras = input.split(/\s|,|\.|;/).filter(Boolean);
-        const blacklist = ['Un', 'Una', 'El', 'La', 'Los', 'Las', 'Y', 'Con', 'De', 'Para', 'En', 'Que', 'Sistema', 'Proyecto', 'App', 'Aplicación', 'Quiero', 'Necesito', 'Unos', 'Unas', 'Del', 'Al', 'Por', 'Sobre', 'Sin', 'A', 'Mi', 'Su', 'Tus', 'Sus', 'Este', 'Esta', 'Estos', 'Estas'];
-        entidades = palabras.filter(p => /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+$/.test(p) && !blacklist.includes(p));
-        entidades = [...new Set(entidades)];
-      }
-      if (entidades.length > 0) {
-        newUml = autoUML(entidades);
-      } else {
-        newUml = { nodes: [], edges: [] };
-      }
+    } catch (error) {
+      console.error('Error al llamar al backend:', error);
+      newUml = { nodes: [], edges: [] };
     }
+    
     // Añade respuesta del bot
     const newBotMsg = { role: 'bot', content: 'Diagrama generado.' };
     const updatedChats = chats.map(chat =>
@@ -353,6 +314,24 @@ function App() {
     if (selectedChat.id === selectedId) {
       setNodes(newUml.nodes);
       setEdges(newUml.edges);
+    }
+  };
+
+  // Función de prueba con datos hardcodeados
+  const handleTestDiagram = async () => {
+    console.log('Botón de prueba presionado');
+    try {
+      const response = await axios.post('http://localhost:3001/api/uml-test', {});
+      console.log('Respuesta de prueba:', response.data);
+      if (response.data && response.data.nodes && response.data.edges) {
+        console.log('Actualizando nodos y edges con:', response.data);
+        setNodes(response.data.nodes);
+        setEdges(response.data.edges);
+      } else {
+        console.error('Datos de prueba no tienen el formato esperado');
+      }
+    } catch (error) {
+      console.error('Error en prueba:', error);
     }
   };
 
@@ -420,6 +399,12 @@ function App() {
           >
             Ver script SQL
           </button>
+          <button
+            onClick={handleTestDiagram}
+            style={{ position: 'absolute', top: 16, right: 150, zIndex: 10, background: '#22c55e', color: '#fff', border: 'none', borderRadius: 4, padding: '8px 16px', cursor: 'pointer' }}
+          >
+            Prueba Diagrama
+          </button>
           {/* Panel para mostrar el script SQL */}
           {showSQL && (
             <div style={{ position: 'absolute', top: 60, right: 16, zIndex: 20, background: '#23232a', color: '#fff', borderRadius: 8, padding: 20, maxWidth: 500, maxHeight: 400, overflowY: 'auto', boxShadow: '0 2px 8px #0008' }}>
@@ -436,6 +421,7 @@ function App() {
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              nodeTypes={nodeTypes}
               fitView
               deleteKeyCode={['Backspace', 'Delete']}
               onNodeClick={(_, node) => setSelectedNodeId(node.id)}
