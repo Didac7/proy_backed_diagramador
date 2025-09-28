@@ -5,5 +5,9 @@
 	"type": "commonjs",
 	"scripts": {
 		"start": "node index.js"
+	},
+	"dependencies": {
+		"handlebars": "^4.7.8",
+		"multer": "^2.0.2"
 	}
 }

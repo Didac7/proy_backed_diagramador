@@ -118,7 +118,7 @@ function getInitialChats() {
 
 
 function App() {
-// Estado para mostrar el script SQL
+  // Estado para mostrar el script SQL
   const [showSQL, setShowSQL] = useState(false);
   const [sqlScript, setSqlScript] = useState('');
 
@@ -276,12 +276,14 @@ function App() {
       try {
         const prompt = `Genera un diagrama UML completo y detallado para el siguiente sistema. Incluye al menos 6 entidades relevantes, atributos realistas para cada entidad y todas las relaciones posibles (uno a uno, uno a muchos, muchos a muchos). Responde solo en JSON con el formato: { "entidades": [{"nombre": "Entidad", "atributos": ["attr1", ...]}], "relaciones": [{"origen": "Entidad1", "destino": "Entidad2", "tipo": "uno a muchos"}] }. Requerimiento: ${input}`;
         const response = await axios.post('http://localhost:3001/api/uml', { prompt });
-        const content = response.data.content;
+  console.log('Respuesta completa del backend:', response.data);
+  const content = response.data.choices?.[0]?.message?.content;
+  console.log('Campo content:', content);
         let json;
         try {
           json = JSON.parse(content);
         } catch {
-          const match = content.match(/\{[\s\S]*\}/);
+          const match = content && content.match(/\{[\s\S]*\}/);
           if (match) {
             try {
               json = JSON.parse(match[0]);
