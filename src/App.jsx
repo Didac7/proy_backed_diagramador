@@ -4,6 +4,13 @@ import ReactFlow, { Background, Controls, MiniMap, addEdge, useNodesState, useEd
 import 'reactflow/dist/style.css';
 import ChatInput from './ChatInput';
 import Sidebar from './Sidebar';
+import UmlNode from './UmlNode';
+
+// Definir los tipos de nodos personalizados
+const nodeTypes = {
+  umlNode: UmlNode,
+};
+
 // Razonamiento automático para atributos y relaciones
 const atributosPorEntidad = {
   cliente: ['id', 'nombre', 'email'],
@@ -19,10 +26,18 @@ const atributosPorEntidad = {
   comentario: ['id', 'texto', 'fecha'],
   publicacion: ['id', 'contenido', 'fecha'],
   curso: ['id', 'nombre', 'creditos'],
+  materia: ['id', 'nombre', 'creditos'],
   alumno: ['id', 'nombre', 'grado'],
+  estudiante: ['id', 'nombre', 'apellido', 'edad', 'curso_id'],
+  profesor: ['id', 'nombre', 'apellido', 'edad', 'especialidad'],
+  asignatura: ['id', 'nombre', 'curso_id'],
+  horario: ['id', 'dia', 'hora', 'curso_id'],
+  nota: ['id', 'valor', 'estudiante_id', 'asignatura_id'],
   proveedor: ['id', 'nombre', 'telefono'],
   entradastock: ['id', 'fecha', 'cantidad'],
-  matricula: ['id', 'anio'],
+  matricula: ['id', 'fecha_matricula', 'semestre', 'anio'],
+  calificacion: ['id', 'nota', 'fecha_evaluacion', 'periodo'],
+  detallepedido: ['id', 'cantidad', 'precio_unitario'],
   cita: ['id', 'fecha', 'motivo'],
   paciente: ['id', 'nombre', 'fechaNacimiento'],
   medico: ['id', 'nombre', 'especialidad'],
@@ -41,36 +56,98 @@ function sugerirRelaciones(entidades) {
   // Reglas simples para relaciones típicas
   const rels = [];
   const lower = entidades.map(e => e.toLowerCase());
-  if (lower.includes('cliente') && lower.includes('pedido')) {
-    rels.push({ origen: 'Cliente', destino: 'Pedido', tipo: 'uno a muchos' });
+  
+  // Helper para encontrar entidad por nombre parcial
+  const encontrarEntidad = (patron) => {
+    return entidades.find(ent => ent.toLowerCase().includes(patron));
+  };
+  
+  // Relaciones específicas
+  const cliente = encontrarEntidad('cliente');
+  const pedido = encontrarEntidad('pedido');
+  const producto = encontrarEntidad('producto');
+  const usuario = encontrarEntidad('usuario');
+  const comentario = encontrarEntidad('comentario');
+  const publicacion = encontrarEntidad('publicacion');
+  const alumno = encontrarEntidad('alumno') || encontrarEntidad('estudiante');
+  const curso = encontrarEntidad('curso') || encontrarEntidad('materia');
+  const asignatura = encontrarEntidad('asignatura');
+  const profesor = encontrarEntidad('profesor');
+  const empleado = encontrarEntidad('empleado');
+  const registro = encontrarEntidad('registro');
+  const paciente = encontrarEntidad('paciente');
+  const cita = encontrarEntidad('cita');
+  const medico = encontrarEntidad('medico') || encontrarEntidad('doctor');
+  const proveedor = encontrarEntidad('proveedor');
+  const entrada = encontrarEntidad('entrada');
+  
+  // Relaciones uno a muchos
+  if (cliente && pedido) {
+    rels.push({ origen: cliente, destino: pedido, tipo: 'uno a muchos' });
   }
-  if (lower.includes('pedido') && lower.includes('producto')) {
-    rels.push({ origen: 'Pedido', destino: 'Producto', tipo: 'muchos a muchos' });
+  if (usuario && comentario) {
+    rels.push({ origen: usuario, destino: comentario, tipo: 'uno a muchos' });
   }
-  if (lower.includes('usuario') && lower.includes('comentario')) {
-    rels.push({ origen: 'Usuario', destino: 'Comentario', tipo: 'uno a muchos' });
+  if (usuario && publicacion) {
+    rels.push({ origen: usuario, destino: publicacion, tipo: 'uno a muchos' });
   }
-  if (lower.includes('usuario') && lower.includes('publicacion')) {
-    rels.push({ origen: 'Usuario', destino: 'Publicacion', tipo: 'uno a muchos' });
+  if (empleado && registro) {
+    rels.push({ origen: empleado, destino: registro, tipo: 'uno a muchos' });
   }
-  if (lower.includes('alumno') && lower.includes('curso')) {
-    rels.push({ origen: 'Alumno', destino: 'Curso', tipo: 'muchos a muchos' });
+  if (paciente && cita) {
+    rels.push({ origen: paciente, destino: cita, tipo: 'uno a muchos' });
   }
-  if (lower.includes('empleado') && lower.includes('registroasistencia')) {
-    rels.push({ origen: 'Empleado', destino: 'RegistroAsistencia', tipo: 'uno a muchos' });
+  if (medico && cita) {
+    rels.push({ origen: medico, destino: cita, tipo: 'uno a muchos' });
   }
-  if (lower.includes('paciente') && lower.includes('cita')) {
-    rels.push({ origen: 'Paciente', destino: 'Cita', tipo: 'uno a muchos' });
+  if (proveedor && entrada) {
+    rels.push({ origen: proveedor, destino: entrada, tipo: 'uno a muchos' });
   }
-  if (lower.includes('medico') && lower.includes('cita')) {
-    rels.push({ origen: 'Medico', destino: 'Cita', tipo: 'uno a muchos' });
+  if (entrada && producto) {
+    rels.push({ origen: entrada, destino: producto, tipo: 'uno a muchos' });
   }
-  if (lower.includes('proveedor') && lower.includes('entradastock')) {
-    rels.push({ origen: 'Proveedor', destino: 'EntradaStock', tipo: 'uno a muchos' });
+  
+  // Relaciones académicas específicas
+  if (profesor && curso) {
+    rels.push({ origen: profesor, destino: curso, tipo: 'uno a muchos' });
   }
-  if (lower.includes('entradastock') && lower.includes('producto')) {
-    rels.push({ origen: 'EntradaStock', destino: 'Producto', tipo: 'uno a muchos' });
+  if (curso && asignatura) {
+    rels.push({ origen: curso, destino: asignatura, tipo: 'uno a muchos' });
   }
+  if (profesor && asignatura) {
+    rels.push({ origen: profesor, destino: asignatura, tipo: 'uno a muchos' });
+  }
+  
+  // Relaciones muchos a muchos - CREAR CLASES INTERMEDIAS
+  if (pedido && producto) {
+    // Crear clase intermedia DetallePedido
+    rels.push({ origen: pedido, destino: 'DetallePedido', tipo: 'uno a muchos' });
+    rels.push({ origen: 'DetallePedido', destino: producto, tipo: 'muchos a uno' });
+    rels.push({ entidadIntermedia: 'DetallePedido', atributos: ['id', 'cantidad', 'precio_unitario'] });
+  }
+  
+  if (alumno && curso) {
+    // Crear clase intermedia Matricula
+    rels.push({ origen: alumno, destino: 'Matricula', tipo: 'uno a muchos' });
+    rels.push({ origen: 'Matricula', destino: curso, tipo: 'muchos a uno' });
+    rels.push({ entidadIntermedia: 'Matricula', atributos: ['id', 'fecha_matricula', 'semestre', 'anio'] });
+  }
+  
+  if (alumno && asignatura) {
+    // Crear clase intermedia Calificacion
+    rels.push({ origen: alumno, destino: 'Calificacion', tipo: 'uno a muchos' });
+    rels.push({ origen: 'Calificacion', destino: asignatura, tipo: 'muchos a uno' });
+    rels.push({ entidadIntermedia: 'Calificacion', atributos: ['id', 'nota', 'fecha_evaluacion', 'periodo'] });
+  }
+  
+  // Relaciones académicas adicionales
+  if (medico && alumno) {
+    rels.push({ origen: medico, destino: alumno, tipo: 'uno a muchos' });
+  }
+  if (profesor && alumno) {
+    rels.push({ origen: profesor, destino: alumno, tipo: 'uno a muchos' });
+  }
+  
   // Si no hay reglas, ninguna relación
   return rels;
 }
@@ -78,6 +155,8 @@ function sugerirRelaciones(entidades) {
 // Busca el proyecto y genera nodos y edges automáticamente
 function autoUML(entidades) {
   let x = 100, y = 100;
+  
+  // Crear nodos para entidades originales
   const nodes = entidades.map(ent => {
     const id = ent;
     const attrLines = sugerirAtributos(ent);
@@ -86,20 +165,59 @@ function autoUML(entidades) {
       id,
       position: { x, y },
       data: { label },
-      type: 'default',
+      type: 'umlNode',
     };
     x += 250;
     if (x > 600) { x = 100; y += 200; }
     return node;
   });
-  const edges = sugerirRelaciones(entidades).map(r => ({
-    id: `e${r.origen}-${r.destino}`,
-    source: r.origen,
-    target: r.destino,
-    label: r.tipo,
-    type: 'smoothstep',
-    animated: true,
-  }));
+  
+  // Obtener relaciones y crear entidades intermedias
+  const relaciones = sugerirRelaciones(entidades);
+  const entidadesIntermedias = relaciones.filter(r => r.entidadIntermedia);
+  
+  // Agregar nodos para entidades intermedias
+  entidadesIntermedias.forEach(rel => {
+    const id = rel.entidadIntermedia;
+    const attrLines = rel.atributos;
+    const label = `${id}\n${attrLines.map(a => '- ' + a).join('\n')}`;
+    const node = {
+      id,
+      position: { x, y },
+      data: { label },
+      type: 'umlNode',
+    };
+    x += 250;
+    if (x > 600) { x = 100; y += 200; }
+    nodes.push(node);
+  });
+  
+  // Crear edges solo para relaciones normales (no entidades intermedias)
+  const edges = relaciones
+    .filter(r => !r.entidadIntermedia && r.origen && r.destino)
+    .map(r => ({
+      id: `e${r.origen}-${r.destino}`,
+      source: r.origen,
+      target: r.destino,
+      label: r.tipo,
+      type: 'smoothstep',
+      animated: true,
+      style: { 
+        stroke: '#a5b4fc', 
+        strokeWidth: 2,
+        strokeDasharray: '5,5'
+      },
+      labelStyle: { 
+        fill: '#a5b4fc', 
+        fontSize: 12, 
+        fontWeight: 600 
+      },
+      labelBgStyle: { 
+        fill: '#23232a', 
+        fillOpacity: 0.8 
+      }
+    }));
+  
   return { nodes, edges };
 }
 
@@ -271,27 +389,37 @@ function App() {
     // Añade mensaje del usuario
     const newHistory = [...selectedChat.history, { role: 'user', content: input }];
     let newUml = { nodes: [], edges: [] };
+    
     // Llama a OpenAI si la frase es compleja
-    if (input.length > 30) {
+    if (input.length > 15) {
       try {
         const prompt = `Genera un diagrama UML completo y detallado para el siguiente sistema. Incluye al menos 6 entidades relevantes, atributos realistas para cada entidad y todas las relaciones posibles (uno a uno, uno a muchos, muchos a muchos). Responde solo en JSON con el formato: { "entidades": [{"nombre": "Entidad", "atributos": ["attr1", ...]}], "relaciones": [{"origen": "Entidad1", "destino": "Entidad2", "tipo": "uno a muchos"}] }. Requerimiento: ${input}`;
+        
         const response = await axios.post('http://localhost:3001/api/uml', { prompt });
-        const content = response.data.content;
+        
+        // Extraer contenido de la respuesta de OpenRouter
+        const content = response.data.choices?.[0]?.message?.content || response.data.content || '';
+        
         let json;
         try {
           json = JSON.parse(content);
-        } catch {
-          const match = content.match(/\{[\s\S]*\}/);
-          if (match) {
-            try {
-              json = JSON.parse(match[0]);
-            } catch {
+        } catch (parseError) {
+          if (content && typeof content === 'string') {
+            const match = content.match(/\{[\s\S]*\}/);
+            if (match) {
+              try {
+                json = JSON.parse(match[0]);
+              } catch {
+                json = null;
+              }
+            } else {
               json = null;
             }
           } else {
             json = null;
           }
         }
+        
         if (json && json.entidades) {
           let x = 100, y = 100;
           const nodes = json.entidades.map(ent => {
@@ -302,12 +430,13 @@ function App() {
               id,
               position: { x, y },
               data: { label },
-              type: 'default',
+              type: 'umlNode',
             };
             x += 250;
             if (x > 600) { x = 100; y += 200; }
             return node;
           });
+          
           const edges = (json.relaciones || []).map(r => ({
             id: `e${r.origen}-${r.destino}`,
             source: r.origen,
@@ -315,14 +444,29 @@ function App() {
             label: r.tipo,
             type: 'smoothstep',
             animated: true,
+            style: { 
+              stroke: '#a5b4fc', 
+              strokeWidth: 2,
+              strokeDasharray: '5,5'
+            },
+            labelStyle: { 
+              fill: '#a5b4fc', 
+              fontSize: 12, 
+              fontWeight: 600 
+            },
+            labelBgStyle: { 
+              fill: '#23232a', 
+              fillOpacity: 0.8 
+            }
           }));
+          
           newUml = { nodes, edges };
         }
       } catch (e) {
         newUml = { nodes: [], edges: [] };
       }
     } else {
-      // Parser local
+      // Parser local mejorado
       let entidades = [];
       const match = input.match(/entidades:\s*([\w, ]+)/i);
       if (match) {
@@ -330,11 +474,34 @@ function App() {
       } else if (input.includes(',')) {
         entidades = input.split(',').map(e => e.trim()).filter(Boolean);
       } else {
-        const palabras = input.split(/\s|,|\.|;/).filter(Boolean);
-        const blacklist = ['Un', 'Una', 'El', 'La', 'Los', 'Las', 'Y', 'Con', 'De', 'Para', 'En', 'Que', 'Sistema', 'Proyecto', 'App', 'Aplicación', 'Quiero', 'Necesito', 'Unos', 'Unas', 'Del', 'Al', 'Por', 'Sobre', 'Sin', 'A', 'Mi', 'Su', 'Tus', 'Sus', 'Este', 'Esta', 'Estos', 'Estas'];
-        entidades = palabras.filter(p => /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+$/.test(p) && !blacklist.includes(p));
-        entidades = [...new Set(entidades)];
+        // Buscar palabras clave que indiquen entidades
+        const palabrasInput = input.toLowerCase();
+        
+        // Mapeo de contextos a entidades comunes
+        if (palabrasInput.includes('colegio') || palabrasInput.includes('escuela') || palabrasInput.includes('universidad')) {
+          entidades = ['Estudiante', 'Profesor', 'Materia', 'Aula', 'Curso'];
+        } else if (palabrasInput.includes('ecommerce') || palabrasInput.includes('tienda') || palabrasInput.includes('venta')) {
+          entidades = ['Cliente', 'Producto', 'Pedido', 'Categoria'];
+        } else if (palabrasInput.includes('hospital') || palabrasInput.includes('clinica') || palabrasInput.includes('medico')) {
+          entidades = ['Paciente', 'Medico', 'Cita', 'Diagnostico'];
+        } else if (palabrasInput.includes('biblioteca')) {
+          entidades = ['Usuario', 'Libro', 'Prestamo', 'Autor'];
+        } else if (palabrasInput.includes('hotel') || palabrasInput.includes('reserva')) {
+          entidades = ['Huesped', 'Habitacion', 'Reserva', 'Servicio'];
+        } else if (palabrasInput.includes('restaurante')) {
+          entidades = ['Cliente', 'Mesa', 'Reserva', 'Plato'];
+        } else {
+          // Fallback: extraer palabras que parezcan entidades
+          const palabras = input.split(/\s|,|\.|;/).filter(Boolean);
+          const blacklist = ['un', 'una', 'el', 'la', 'los', 'las', 'y', 'con', 'de', 'para', 'en', 'que', 'sistema', 'proyecto', 'app', 'aplicación', 'quiero', 'necesito', 'haceme', 'hacer', 'crear', 'generar', 'unos', 'unas', 'del', 'al', 'por', 'sobre', 'sin', 'a', 'mi', 'su', 'tus', 'sus', 'este', 'esta', 'estos', 'estas'];
+          entidades = palabras
+            .filter(p => p.length > 3) // Palabras de más de 3 caracteres
+            .filter(p => !blacklist.includes(p.toLowerCase()))
+            .map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()) // Capitalizar
+            .filter((v, i, a) => a.indexOf(v) === i); // Remover duplicados
+        }
       }
+      
       if (entidades.length > 0) {
         newUml = autoUML(entidades);
       } else {
@@ -348,6 +515,7 @@ function App() {
         ? { ...chat, history: [...newHistory, newBotMsg], uml: newUml }
         : chat
     );
+    
     setChats(updatedChats);
     // Si el chat seleccionado es el actual, actualiza nodos y edges editables
     if (selectedChat.id === selectedId) {
@@ -380,7 +548,33 @@ function App() {
   };
 
   // Handler para conectar nodos
-  const onConnect = (params) => setEdges(eds => addEdge({ ...params, animated: true, type: 'smoothstep' }, eds));
+  const onConnect = (params) => setEdges(eds => addEdge({ 
+    ...params, 
+    animated: true, 
+    type: 'smoothstep',
+    style: { 
+      stroke: '#a5b4fc', 
+      strokeWidth: 2,
+      strokeDasharray: '5,5'
+    },
+    labelStyle: { 
+      fill: '#a5b4fc', 
+      fontSize: 12, 
+      fontWeight: 600 
+    },
+    labelBgStyle: { 
+      fill: '#23232a', 
+      fillOpacity: 0.8 
+    }
+  }, eds));
+
+  // Establecer la función global para el UmlNode
+  useEffect(() => {
+    window.setSelectedNodeId = setSelectedNodeId;
+    return () => {
+      delete window.setSelectedNodeId;
+    };
+  }, []);
 
   // Handler para eliminar nodos/edges y guardar cambios en el chat
   useEffect(() => {
@@ -413,19 +607,121 @@ function App() {
           <ChatInput onSend={handleSend} />
         </div>
   <div style={{ flex: 1, minHeight: 400, margin: '24px 24px 24px 24px', background: '#18181b', borderRadius: 8, display: 'flex', position: 'relative' }}>
-          {/* Botón para mostrar SQL */}
+          {/* Botón para mostrar/editar SQL */}
           <button
             onClick={generateSQL}
             style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, background: '#a5b4fc', color: '#23232a', border: 'none', borderRadius: 4, padding: '8px 16px', cursor: 'pointer' }}
           >
-            Ver script SQL
+            📝 Ver Script SQL
           </button>
-          {/* Panel para mostrar el script SQL */}
+          {/* Panel para editar el script SQL */}
           {showSQL && (
-            <div style={{ position: 'absolute', top: 60, right: 16, zIndex: 20, background: '#23232a', color: '#fff', borderRadius: 8, padding: 20, maxWidth: 500, maxHeight: 400, overflowY: 'auto', boxShadow: '0 2px 8px #0008' }}>
-              <h3 style={{ color: '#a5b4fc', marginBottom: 8 }}>Script SQL generado</h3>
-              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 14 }}>{sqlScript}</pre>
-              <button onClick={() => setShowSQL(false)} style={{ marginTop: 12, background: '#18181b', color: '#fff', border: '1px solid #a5b4fc', borderRadius: 4, padding: '6px 0', cursor: 'pointer' }}>Cerrar</button>
+            <div style={{ 
+              position: 'fixed', 
+              top: 0, 
+              left: 0, 
+              width: '100vw', 
+              height: '100vh', 
+              background: 'rgba(0,0,0,0.8)', 
+              zIndex: 1000, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center' 
+            }}>
+              <div style={{ 
+                background: '#23232a', 
+                color: '#fff', 
+                borderRadius: 12, 
+                padding: 24, 
+                width: '80%', 
+                maxWidth: 800, 
+                height: '80%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3)' 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h3 style={{ color: '#a5b4fc', margin: 0 }}>Editor de Script SQL</h3>
+                  <button 
+                    onClick={() => setShowSQL(false)} 
+                    style={{ 
+                      background: 'transparent', 
+                      color: '#a5b4fc', 
+                      border: '1px solid #a5b4fc', 
+                      borderRadius: 4, 
+                      padding: '4px 8px', 
+                      cursor: 'pointer',
+                      fontSize: 16
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <textarea
+                  value={sqlScript}
+                  onChange={(e) => setSqlScript(e.target.value)}
+                  style={{
+                    flex: 1,
+                    background: '#18181b',
+                    color: '#fff',
+                    border: '1px solid #444',
+                    borderRadius: 8,
+                    padding: 16,
+                    fontSize: 14,
+                    fontFamily: 'Monaco, Consolas, "Courier New", monospace',
+                    resize: 'none',
+                    outline: 'none',
+                    lineHeight: 1.5
+                  }}
+                  placeholder="Tu script SQL aparecerá aquí..."
+                />
+                
+                <div style={{ 
+                  display: 'flex', 
+                  gap: 12, 
+                  marginTop: 16, 
+                  justifyContent: 'flex-end' 
+                }}>
+                  {/* <button 
+                    onClick={() => navigator.clipboard.writeText(sqlScript)}
+                    style={{ 
+                      background: '#18181b', 
+                      color: '#a5b4fc', 
+                      border: '1px solid #a5b4fc', 
+                      borderRadius: 6, 
+                      padding: '8px 16px', 
+                      cursor: 'pointer',
+                      fontSize: 14
+                    }}
+                  >
+                    📋 Copiar
+                  </button> */}
+                  <button 
+                    onClick={() => {
+                      const blob = new Blob([sqlScript], { type: 'text/sql' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'script.sql';
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    style={{ 
+                      background: '#a5b4fc', 
+                      color: '#23232a', 
+                      border: 'none', 
+                      borderRadius: 6, 
+                      padding: '8px 16px', 
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: 14
+                    }}
+                  >
+                    💾 Descargar
+                  </button>
+                </div>
+              </div>
             </div>
           )}
           {/* Diagrama UML */}
@@ -436,9 +732,28 @@ function App() {
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              nodeTypes={nodeTypes}
               fitView
               deleteKeyCode={['Backspace', 'Delete']}
               onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+              defaultEdgeOptions={{
+                animated: true,
+                type: 'smoothstep',
+                style: { 
+                  stroke: '#a5b4fc', 
+                  strokeWidth: 2,
+                  strokeDasharray: '5,5'
+                },
+                labelStyle: { 
+                  fill: '#a5b4fc', 
+                  fontSize: 12, 
+                  fontWeight: 600 
+                },
+                labelBgStyle: { 
+                  fill: '#23232a', 
+                  fillOpacity: 0.8 
+                }
+              }}
             >
               <Controls />
               <Background />
